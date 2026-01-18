@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dr. Poidevien's Health Assistant</title>
+    <style>
+        /* ISOLATED STYLES - Safer approach */
+        #turtlebot-embedded-container {
+            --primary-color: #2c7873;
+            --secondary-color: #50a3a2;
+            --accent-color: #a3de83;
+            --light-bg: #f0f8ff;
+            --message-bg: #e6f7ff;
+            --user-message-bg: #d4edda;
+            --warning-bg: #fff3cd;
+            --border-color: #d1ecf1;
+            --teal-gradient: linear-gradient(135deg, #2c7873 0%, #50a3a2 100%);
+            
+            /* SAFER isolation without breaking parent */
+            position: relative !important;
+            display: block !important;
+            min-height: auto !important;
+            overflow: visible !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            isolation: isolate !important; /* Modern isolation */
+            contain: content !important; /* Performance and isolation */
+            z-index: 1;
+        }
+        
+        /* Only reset styles inside our container, not globally */
+        #turtlebot-embedded-container * {
+            box-sizing: border-box !important;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+        }
+        
+        #turtlebot-embedded-container {
+            background-color: var(--light-bg);
+            color: #333;
+            padding: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+            font-size: 16px;
+            width: 100%;
+            border-radius: 12px;
+        }
+        
+        #turtlebot-embedded-container .header {
+            text-align: center;
+            padding: 20px;
+            background-color: white;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+        }
+        
+        #turtlebot-embedded-container .clinic-info {
+            background-color: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 12px;
+            font-size: 0.9rem;
+            border: 1px solid #e9ecef;
+        }
+        
+        #turtlebot-embedded-container h1 {
+            color: var(--primary-color);
+            margin-bottom: 8px;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        
+        #turtlebot-embedded-container h2 {
+            color: var(--primary-color);
+            margin: 20px 0 12px 0;
+            padding-bottom: 6px;
+            border-bottom: 2px solid var(--accent-color);
+            font-size: 1.3rem;
+        }
+        
+        #turtlebot-embedded-container .chatbot-container {
+            display: flex;
+            flex-direction: column;
+            height: 550px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            background-color: white;
+            border: 1px solid var(--border-color);
+        }
+        
+        #turtlebot-embedded-container .chat-header {
+            background: var(--teal-gradient);
+            color: white;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        #turtlebot-embedded-container .turtle-avatar {
+            font-size: 2.2rem;
+            background-color: white;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        #turtlebot-embedded-container .chat-header h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        #turtlebot-embedded-container .chat-header p {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+        
+        #turtlebot-embedded-container .chat-messages {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            scroll-behavior: smooth;
+        }
+        
+        #turtlebot-embedded-container .message {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 14px;
+            word-wrap: break-word;
+            animation: fadeIn 0.3s ease;
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        #turtlebot-embedded-container .bot-message {
+            background-color: var(--message-bg);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+        
+        #turtlebot-embedded-container .user-message {
+            background-color: var(--user-message-bg);
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+            border: 1px solid #c3e6cb;
+        }
+        
+        #turtlebot-embedded-container .chat-input-area {
+            display: flex;
+            padding: 16px;
+            background-color: white;
+            border-top: 1px solid #eee;
+            gap: 8px;
+        }
+        
+        #turtlebot-embedded-container #userInput {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border 0.3s;
+            min-width: 0;
+        }
+        
+        #turtlebot-embedded-container #userInput:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(44, 120, 115, 0.1);
+        }
+        
+        #turtlebot-embedded-container #sendButton {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        #turtlebot-embedded-container #sendButton:hover {
+            background-color: #235f5a;
+        }
+        
+        #turtlebot-embedded-container .quick-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: white;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        
+        #turtlebot-embedded-container .category-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
+        #turtlebot-embedded-container .quick-btn {
+            background-color: white;
+            border: 1px solid var(--accent-color);
+            border-radius: 16px;
+            padding: 8px 14px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        #turtlebot-embedded-container .quick-btn:hover {
+            background-color: var(--accent-color);
+            color: #235f5a;
+            transform: translateY(-1px);
+        }
+        
+        #turtlebot-embedded-container .footer {
+            text-align: center;
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid #ddd;
+            color: #666;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+        
+        #turtlebot-embedded-container .unknown-response {
+            background-color: var(--warning-bg);
+            border-left: 4px solid #ffc107;
+            padding: 12px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.9rem;
+        }
+        
+        #turtlebot-embedded-container .contact-info {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-top: 6px;
+            display: block;
+        }
+        
+        #turtlebot-embedded-container .hipaa-disclaimer {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.85rem;
+            margin: 10px 0;
+        }
+        
+        #turtlebot-embedded-container .info-icon {
+            margin-right: 6px;
+            color: var(--primary-color);
+        }
+        
+        #turtlebot-embedded-container .age-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 15px 0;
+        }
+        
+        #turtlebot-embedded-container .age-btn {
+            background-color: white;
+            border: 2px solid var(--primary-color);
+            border-radius: 20px;
+            padding: 10px 20px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--primary-color);
+            font-weight: 500;
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
+        }
+        
+        #turtlebot-embedded-container .age-btn:hover, 
+        #turtlebot-embedded-container .age-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        #turtlebot-embedded-container .treatment-badge {
+            display: inline-block;
+            background-color: #d1ecf1;
+            color: #0c5460;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin: 4px 4px 4px 0;
+        }
+        
+        #turtlebot-embedded-container .category-icon {
+            font-size: 1rem;
+        }
+        
+        #turtlebot-embedded-container .checkup-card {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 8px 0;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        #turtlebot-embedded-container .checkup-age {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 4px;
+        }
+        
+        #turtlebot-embedded-container .new-client-badge {
+            display: inline-block;
+            background-color: #d4edda;
+            color: #155724;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin: 5px 0;
+        }
+        
+        #turtlebot-embedded-container .instruction-box {
+            background-color: #e8f4fd;
+            border: 2px dashed var(--primary-color);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        #turtlebot-embedded-container .instruction-step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+            font-size: 0.95rem;
+        }
+        
+        #turtlebot-embedded-container .step-number {
+            background-color: var(--primary-color);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        #turtlebot-embedded-container .highlight-message {
+            background-color: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 12px;
+            margin: 10px 0;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        
+        #turtlebot-embedded-container .typing-indicator {
+            display: inline-block;
+            margin-left: 8px;
+        }
+        
+        #turtlebot-embedded-container .typing-indicator span {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background-color: #999;
+            border-radius: 50%;
+            margin: 0 1px;
+            animation: typing 1.4s infinite ease-in-out both;
+        }
+        
+        #turtlebot-embedded-container .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        #turtlebot-embedded-container .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes typing {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+        
+        #turtlebot-embedded-container .teen-response {
+            background-color: #e8f5e8;
+            border-left: 4px solid #4caf50;
+        }
+        
+        #turtlebot-embedded-container .senior-response {
+            background-color: #f3e5f5;
+            border-left: 4px solid #9c27b0;
+        }
+        
+        #turtlebot-embedded-container .scroll-top-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background-color: var(--primary-color);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s;
+            z-index: 9999;
+            border: none;
+            font-size: 1.2rem;
+        }
+        
+        #turtlebot-embedded-container .scroll-top-btn:hover {
+            background-color: #235f5a;
+            transform: translateY(-3px);
+        }
+        
+        #turtlebot-embedded-container .scroll-top-btn.hidden {
+            opacity: 0;
+            transform: translateY(20px);
+            pointer-events: none;
+        }
+        
+        #turtlebot-embedded-container .map-link {
+            display: inline-block;
+            background-color: #2c7873;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-decoration: none;
+            margin-top: 10px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        #turtlebot-embedded-container .map-link:hover {
+            background-color: #235f5a;
+            transform: translateY(-2px);
+        }
+        
+        #turtlebot-embedded-container .screening-badge {
+            display: inline-block;
+            background-color: #e8f5e8;
+            color: #2e7d32;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            margin: 3px;
+            border: 1px solid #c8e6c9;
+        }
+        
+        #turtlebot-embedded-container .prevention-tip {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        #turtlebot-embedded-container .female-screening {
+            background-color: #f3e5f5;
+            border-left: 4px solid #9c27b0;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        #turtlebot-embedded-container .male-screening {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        @media (max-width: 768px) {
+            #turtlebot-embedded-container {
+                padding: 12px;
+                font-size: 15px;
+            }
+            
+            #turtlebot-embedded-container .chatbot-container {
+                height: 500px;
+            }
+            
+            #turtlebot-embedded-container .message {
+                max-width: 92%;
+                font-size: 0.9rem;
+                padding: 10px 14px;
+            }
+            
+            #turtlebot-embedded-container .turtle-avatar {
+                width: 50px;
+                height: 50px;
+                font-size: 1.8rem;
+            }
+            
+            #turtlebot-embedded-container h1 {
+                font-size: 1.5rem;
+            }
+            
+            #turtlebot-embedded-container h2 {
+                font-size: 1.2rem;
+            }
+            
+            #turtlebot-embedded-container .quick-buttons, 
+            #turtlebot-embedded-container .category-buttons {
+                gap: 6px;
+            }
+            
+            #turtlebot-embedded-container .quick-btn {
+                font-size: 0.8rem;
+                padding: 6px 12px;
+                flex: 1 0 calc(50% - 6px);
+                min-width: 0;
+            }
+            
+            #turtlebot-embedded-container .age-btn {
+                flex: 1 0 calc(50% - 8px);
+                padding: 8px 12px;
+                font-size: 0.9rem;
+            }
+            
+            #turtlebot-embedded-container .chat-header {
+                padding: 12px;
+            }
+            
+            #turtlebot-embedded-container .chat-messages {
+                padding: 12px;
+            }
+            
+            #turtlebot-embedded-container .chat-input-area {
+                padding: 12px;
+            }
+            
+            #turtlebot-embedded-container .header {
+                padding: 15px;
+            }
+            
+            #turtlebot-embedded-container .scroll-top-btn {
+                bottom: 20px;
+                right: 20px;
+                width: 45px;
+                height: 45px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            #turtlebot-embedded-container .chatbot-container {
+                height: 450px;
+            }
+            
+            #turtlebot-embedded-container .turtle-avatar {
+                width: 45px;
+                height: 45px;
+                font-size: 1.6rem;
+            }
+            
+            #turtlebot-embedded-container .chat-header h3 {
+                font-size: 1.1rem;
+            }
+            
+            #turtlebot-embedded-container .chat-header p {
+                font-size: 0.85rem;
+            }
+            
+            #turtlebot-embedded-container .quick-btn {
+                flex: 1 0 100%;
+                text-align: center;
+            }
+            
+            #turtlebot-embedded-container .age-btn {
+                flex: 1 0 100%;
+            }
+            
+            #turtlebot-embedded-container #userInput {
+                font-size: 0.9rem;
+                padding: 8px 12px;
+            }
+            
+            #turtlebot-embedded-container #sendButton {
+                width: 40px;
+                height: 40px;
+            }
+            
+            #turtlebot-embedded-container .scroll-top-btn {
+                bottom: 15px;
+                right: 15px;
+                width: 40px;
+                height: 40px;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            #turtlebot-embedded-container .chatbot-container {
+                height: 420px;
+            }
+            
+            #turtlebot-embedded-container .chat-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 8px;
+            }
+            
+            #turtlebot-embedded-container .turtle-avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 1.4rem;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div id="turtlebot-embedded-container">
+        <button class="scroll-top-btn hidden" id="scrollTopBtn">
+            <i class="fas fa-arrow-up"></i>
+        </button>
+        
+        <div class="header" id="turtlebot-header">
+            <h1>Dr. Poidevien's Health Assistant</h1>
+            <p>Comprehensive preventive care and health information</p>
+            <div class="clinic-info">
+                <p><i class="fas fa-phone info-icon"></i> <strong>(754) 273-9174</strong> | 
+                <i class="fas fa-clock info-icon"></i> Mon-Fri 8am-5pm, Closed Sat & Sun</p>
+                <p><i class="fas fa-map-marker-alt info-icon"></i> <strong>6245 Miramar Parkway Suite 103, Miramar, FL 33023</strong></p>
+            </div>
+        </div>
+        
+        <div class="instruction-box">
+            <h3 style="color: var(--primary-color); margin-bottom: 15px;">How to Use This Assistant:</h3>
+            <div class="instruction-step">
+                <div class="step-number">1</div>
+                <div><strong>Select Your Age Group</strong> below</div>
+            </div>
+            <div class="instruction-step">
+                <div class="step-number">2</div>
+                <div><strong>Choose a Health Topic</strong> from the buttons</div>
+            </div>
+            <div class="instruction-step">
+                <div class="step-number">3</div>
+                <div><strong>View Your Answer</strong> automatically in the chat</div>
+            </div>
+            <p style="margin-top: 10px; font-size: 0.9rem; color: #666;">
+                <i class="fas fa-info-circle"></i> The page will automatically scroll to show answers!
+            </p>
+        </div>
+        
+        <div class="chatbot-container" id="bot">
+            <div class="chat-header">
+                <div class="turtle-avatar">
+                    <span>🐢</span>
+                </div>
+                <div>
+                    <h3>Hi, I'm TurtleBot <span>👋</span></h3>
+                    <p>Dr. Poidevien's comprehensive health assistant <span>🩺</span></p>
+                </div>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages"></div>
+            
+            <div class="chat-input-area">
+                <input type="text" id="userInput" placeholder="Or type your own question...">
+                <button id="sendButton"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+        
+        <h2>Step 1: Select Your Age Group</h2>
+        <div class="age-selector" id="ageSelector">
+            <button class="age-btn" data-age="12-17">12-17</button>
+            <button class="age-btn" data-age="18-29">18-29</button>
+            <button class="age-btn" data-age="30-49">30-49</button>
+            <button class="age-btn" data-age="50+">50+</button>
+        </div>
+        
+        <h2>Step 2: Choose a Health Topic</h2>
+        <div class="quick-buttons">
+            <button class="quick-btn" data-question="What are your hours?">
+                <i class="fas fa-clock category-icon"></i> Clinic Hours
+            </button>
+            <button class="quick-btn" data-question="What is your location?">
+                <i class="fas fa-map-marker-alt category-icon"></i> Clinic Location
+            </button>
+            <button class="quick-btn" data-question="How often should I get checkups?">
+                <i class="fas fa-calendar-check category-icon"></i> Annual Checkups
+            </button>
+            <button class="quick-btn" data-question="Are you accepting new clients?">
+                <i class="fas fa-user-plus category-icon"></i> New Clients
+            </button>
+        </div>
+        
+        <h2>Cancer Screenings</h2>
+        <div class="category-buttons">
+            <button class="quick-btn" data-question="How often do I need to do a breast cancer test?">
+                <i class="fas fa-female"></i> Breast Cancer Screening
+            </button>
+            <button class="quick-btn" data-question="How often do I need to do prostate test?">
+                <i class="fas fa-male"></i> Prostate Screening
+            </button>
+            <button class="quick-btn" data-question="How often do I have to do a colon cancer test?">
+                <i class="fas fa-stomach"></i> Colon Cancer Screening
+            </button>
+            <button class="quick-btn" data-question="How often should I get a pap smear?">
+                <i class="fas fa-venus"></i> Cervical Cancer Screening
+            </button>
+        </div>
+        
+        <h2>Prevention & Chronic Disease</h2>
+        <div class="category-buttons">
+            <button class="quick-btn" data-question="How can I prevent high blood pressure?">
+                <i class="fas fa-heartbeat"></i> Prevent High Blood Pressure
+            </button>
+            <button class="quick-btn" data-question="How can I prevent diabetes?">
+                <i class="fas fa-prescription-bottle-alt"></i> Prevent Diabetes
+            </button>
+            <button class="quick-btn" data-question="How can I improve my heart health?">
+                <i class="fas fa-heart"></i> Heart Health
+            </button>
+            <button class="quick-btn" data-question="What vaccines do I need?">
+                <i class="fas fa-syringe"></i> Recommended Vaccines
+            </button>
+        </div>
+        
+        <h2>Sexual Health</h2>
+        <div class="category-buttons">
+            <button class="quick-btn" data-question="How can I protect myself from STDs?">
+                <i class="fas fa-shield-alt"></i> STD Prevention
+            </button>
+            <button class="quick-btn" data-question="What is HIV?">
+                <i class="fas fa-heartbeat"></i> HIV Information
+            </button>
+            <button class="quick-btn" data-question="How do I get tested?">
+                <i class="fas fa-flask"></i> STD Testing
+            </button>
+            <button class="quick-btn" data-question="Can I get tested without my parents knowing?">
+                <i class="fas fa-user-secret"></i> Teens & Privacy
+            </button>
+        </div>
+        
+        <div class="footer">
+            <p><i class="fas fa-shield-alt"></i> For informational purposes only. Not medical advice.</p>
+            <p><i class="fas fa-stethoscope"></i> Always consult with a healthcare provider for personal concerns.</p>
+            <p>© Dr. Poidevien's Practice | All information is confidential and protected</p>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+            
+            // Wait for DOM to be fully loaded
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('TurtleBot initialized');
+                
+                // Variables
+                const chatMessages = document.getElementById('chatMessages');
+                const userInput = document.getElementById('userInput');
+                const sendButton = document.getElementById('sendButton');
+                const scrollTopBtn = document.getElementById('scrollTopBtn');
+                const ageButtons = document.querySelectorAll('.age-btn');
+                const quickButtons = document.querySelectorAll('.quick-btn');
+                
+                let selectedAge = '18-29'; // Default age group
+                let conversationHistory = [];
+                
+                // Initial bot message
+                addMessage('bot', "Hello! I'm TurtleBot, Dr. Poidevien's health assistant. 👋 Please select your age group above, then choose a health topic. How can I help you today?");
+                
+                // Event Listeners
+                sendButton.addEventListener('click', handleSendMessage);
+                userInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') handleSendMessage();
+                });
+                
+                // Age selection - FIXED with better event handling
+                ageButtons.forEach(button => {
+                    button.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        // Remove active class from all buttons
+                        ageButtons.forEach(btn => btn.classList.remove('active'));
+                        // Add active class to clicked button
+                        this.classList.add('active');
+                        selectedAge = this.getAttribute('data-age');
+                        
+                        // Add message about age selection
+                        addMessage('user', `Selected age group: ${selectedAge}`);
+                        
+                        // Age-specific responses
+                        let ageResponse = '';
+                        switch(selectedAge) {
+                            case '12-17':
+                                ageResponse = "Thanks for selecting 12-17! I'll provide age-appropriate information for teens. Remember, some services may require parental consent, but I can guide you on what's available.";
+                                break;
+                            case '18-29':
+                                ageResponse = "Great! 18-29 is an important time for establishing healthy habits. I'll focus on preventive care, screenings, and health maintenance for young adults.";
+                                break;
+                            case '30-49':
+                                ageResponse = "Perfect! Ages 30-49 are key for preventive screenings and maintaining wellness. I'll highlight important tests and health maintenance for this age group.";
+                                break;
+                            case '50+':
+                                ageResponse = "Excellent choice! For ages 50+, I'll emphasize recommended screenings, chronic disease prevention, and maintaining optimal health through the golden years.";
+                                break;
+                        }
+                        
+                        setTimeout(() => {
+                            addMessage('bot', ageResponse);
+                            // Scroll the ENTIRE PAGE to the chat
+                            scrollToChat();
+                        }, 500);
+                    });
+                });
+                
+                // Quick buttons - FIXED with better event handling
+                quickButtons.forEach(button => {
+                    button.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        const question = this.getAttribute('data-question');
+                        userInput.value = question;
+                        handleSendMessage();
+                    });
+                });
+                
+                // Scroll to top button
+                scrollTopBtn.addEventListener('click', () => {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+                
+                // Show/hide scroll button
+                window.addEventListener('scroll', () => {
+                    if (window.scrollY > 300) {
+                        scrollTopBtn.classList.remove('hidden');
+                    } else {
+                        scrollTopBtn.classList.add('hidden');
+                    }
+                });
+                
+                // Functions
+                function handleSendMessage() {
+                    const message = userInput.value.trim();
+                    if (!message) return;
+                    
+                    addMessage('user', message);
+                    userInput.value = '';
+                    
+                    // Add typing indicator
+                    const typingIndicator = document.createElement('div');
+                    typingIndicator.className = 'message bot-message typing-indicator';
+                    typingIndicator.innerHTML = 'Thinking<span>.</span><span>.</span><span>.</span>';
+                    chatMessages.appendChild(typingIndicator);
+                    scrollChatToBottom();
+                    
+                    // Simulate bot response delay
+                    setTimeout(() => {
+                        if (typingIndicator.parentNode === chatMessages) {
+                            chatMessages.removeChild(typingIndicator);
+                        }
+                        const response = getBotResponse(message);
+                        addMessage('bot', response);
+                        
+                        // Scroll the ENTIRE PAGE to the chat
+                        scrollToChat();
+                    }, 800 + Math.random() * 800);
+                }
+                
+                function addMessage(sender, text) {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = `message ${sender}-message`;
+                    messageDiv.innerHTML = text;
+                    chatMessages.appendChild(messageDiv);
+                    
+                    // Add to conversation history
+                    conversationHistory.push({ sender, text, timestamp: new Date() });
+                    
+                    scrollChatToBottom();
+                }
+                
+                function scrollChatToBottom() {
+                    chatMessages.scrollTo({
+                        top: chatMessages.scrollHeight,
+                        behavior: 'smooth'
+                    });
+                }
+                
+                // NEW FUNCTION: Scroll entire page to chat container
+                function scrollToChat() {
+                    const chatContainer = document.getElementById('bot');
+                    if (chatContainer) {
+                        chatContainer.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'center' 
+                        });
+                    }
+                }
+                
+                function getBotResponse(message) {
+                    const lowerMessage = message.toLowerCase();
+                    
+                    // Clinic Information
+                    if (lowerMessage.includes('hour') || lowerMessage.includes('open') || lowerMessage.includes('time')) {
+                        return `<strong>Clinic Hours:</strong><br>
+                                • Monday-Friday: 8:00 AM - 5:00 PM<br>
+                                • Saturday: Closed<br>
+                                • Sunday: Closed<br>
+                                • Emergency After Hours: Call (754) 273-9174 and follow prompts<br><br>
+                                <div class="hipaa-disclaimer">
+                                    <i class="fas fa-info-circle"></i> For life-threatening emergencies, call 911 immediately.
+                                </div>`;
+                    }
+                    
+                    if (lowerMessage.includes('location') || lowerMessage.includes('address') || lowerMessage.includes('map')) {
+                        return `<strong>Clinic Location:</strong><br>
+                                <i class="fas fa-map-marker-alt"></i> <strong>6245 Miramar Parkway Suite 103, Miramar, FL 33023</strong><br><br>
+                                • Free parking available<br>
+                                • Wheelchair accessible<br>
+                                • Near public transportation<br><br>
+                                <a href="https://maps.google.com/?q=6245+Miramar+Parkway+Suite+103+Miramar+FL+33023" target="_blank" class="map-link">
+                                    <i class="fas fa-directions"></i> Get Directions on Google Maps
+                                </a>`;
+                    }
+                    
+                    if (lowerMessage.includes('new client') || lowerMessage.includes('accepting') || lowerMessage.includes('patient')) {
+                        return `<span class="new-client-badge">NEW PATIENTS WELCOME!</span><br><br>
+                                <strong>Yes, we are accepting new patients!</strong><br><br>
+                                To schedule your first appointment:<br>
+                                1. Call us at <strong>(754) 273-9174</strong><br>
+                                2. Have your insurance information ready<br>
+                                3. Bring previous medical records if available<br><br>
+                                <div class="checkup-card">
+                                    <div class="checkup-age">New Patient Process:</div>
+                                    • Initial consultation: 60 minutes<br>
+                                    • Complete health assessment<br>
+                                    • Review of medical history<br>
+                                    • Personalized care plan
+                                </div>`;
+                    }
+                    
+                    // Checkups
+                    if (lowerMessage.includes('checkup') || lowerMessage.includes('annual') || lowerMessage.includes('physical')) {
+                        let response = `<strong>Annual Checkup Recommendations:</strong><br><br>`;
+                        
+                        switch(selectedAge) {
+                            case '12-17':
+                                response += `<div class="teen-response">
+                                    <strong>For Ages 12-17:</strong><br>
+                                    • Annual physical exam<br>
+                                    • Sports physicals if applicable<br>
+                                    • Immunization updates (Tdap, HPV, MenACWY)<br>
+                                    • Mental health screening<br>
+                                    • Vision and hearing tests<br>
+                                    • BMI and growth tracking
+                                </div>`;
+                                break;
+                            case '18-29':
+                                response += `<div class="checkup-card">
+                                    <div class="checkup-age">For Ages 18-29:</div>
+                                    • Annual physical exam<br>
+                                    • Blood pressure screening<br>
+                                    • Cholesterol check (every 4-6 years)<br>
+                                    • Diabetes screening if at risk<br>
+                                    • Skin cancer screening<br>
+                                    • STD testing if sexually active
+                                </div>`;
+                                break;
+                            case '30-49':
+                                response += `<div class="checkup-card">
+                                    <div class="checkup-age">For Ages 30-49:</div>
+                                    • Annual physical exam<br>
+                                    • Comprehensive metabolic panel<br>
+                                    • Thyroid screening (every 5 years)<br>
+                                    • Blood pressure at every visit<br>
+                                    • Diabetes screening<br>
+                                    • Cancer screenings as recommended
+                                </div>`;
+                                break;
+                            case '50+':
+                                response += `<div class="senior-response">
+                                    <strong>For Ages 50+:</strong><br>
+                                    • Annual comprehensive exam<br>
+                                    • Colon cancer screening<br>
+                                    • Prostate screening (men)<br>
+                                    • Mammogram (women)<br>
+                                    • Bone density test<br>
+                                    • Cognitive assessment<br>
+                                    • Fall risk evaluation
+                                </div>`;
+                                break;
+                        }
+                        
+                        response += `<br><div class="prevention-tip">
+                            <i class="fas fa-lightbulb"></i> <strong>Tip:</strong> Annual checkups help detect issues early when they're most treatable.
+                        </div>`;
+                        
+                        return response;
+                    }
+                    
+                    // Cancer Screenings
+                    if (lowerMessage.includes('breast') || lowerMessage.includes('mammogram')) {
+                        if (selectedAge === '12-17' || selectedAge === '18-29') {
+                            return `<div class="female-screening">
+                                <strong>Breast Cancer Screening:</strong><br><br>
+                                For your age group (${selectedAge}):<br>
+                                • Clinical breast exam: Every 1-3 years<br>
+                                • Mammogram: Not routinely recommended yet<br>
+                                • Self-awareness: Know what's normal for you<br><br>
+                                <strong>Higher risk individuals</strong> may need earlier screening.
+                            </div>`;
+                        } else if (selectedAge === '30-49') {
+                            return `<div class="female-screening">
+                                <strong>Breast Cancer Screening:</strong><br><br>
+                                For ages 30-49:<br>
+                                • Mammogram: Every 1-2 years starting at age 40-45<br>
+                                • Clinical breast exam: Annually<br>
+                                • Discuss family history with your doctor<br><br>
+                                <span class="screening-badge">RISK ASSESSMENT RECOMMENDED</span>
+                            </div>`;
+                        } else {
+                            return `<div class="female-screening">
+                                <strong>Breast Cancer Screening:</strong><br><br>
+                                For ages 50+:<br>
+                                • Mammogram: Every 1-2 years<br>
+                                • Clinical breast exam: Annually<br>
+                                • Consider 3D mammography<br>
+                                • Continue screening through age 75+<br><br>
+                                <span class="screening-badge">ANNUAL SCREENING RECOMMENDED</span>
+                            </div>`;
+                        }
+                    }
+                    
+                    if (lowerMessage.includes('prostate')) {
+                        if (selectedAge === '12-17' || selectedAge === '18-29' || selectedAge === '30-49') {
+                            return `<div class="male-screening">
+                                <strong>Prostate Cancer Screening:</strong><br><br>
+                                For your age group (${selectedAge}):<br>
+                                • Routine screening not recommended<br>
+                                • Discuss with doctor if high risk<br>
+                                • High risk includes African American men or strong family history<br><br>
+                                <span class="screening-badge">DISCUSS WITH DOCTOR AT AGE 45</span>
+                            </div>`;
+                        } else {
+                            return `<div class="male-screening">
+                                <strong>Prostate Cancer Screening:</strong><br><br>
+                                For ages 50+:<br>
+                                • PSA blood test: Discuss with doctor<br>
+                                • Digital rectal exam: As recommended<br>
+                                • African American men: Start at age 45<br>
+                                • Family history: Start at age 40-45<br><br>
+                                <strong>Decision should be shared between you and your doctor.</strong>
+                            </div>`;
+                        }
+                    }
+                    
+                    if (lowerMessage.includes('colon') || lowerMessage.includes('colorectal')) {
+                        if (selectedAge === '12-17' || selectedAge === '18-29') {
+                            return `<strong>Colon Cancer Screening:</strong><br><br>
+                                For your age group (${selectedAge}):<br>
+                                • Routine screening not recommended<br>
+                                • Start at age 45 for average risk<br>
+                                • Earlier if family history or symptoms<br><br>
+                                <div class="prevention-tip">
+                                    <strong>Prevention Tips:</strong> High fiber diet, regular exercise, limit red meat.
+                                </div>`;
+                        } else if (selectedAge === '30-49') {
+                            return `<strong>Colon Cancer Screening:</strong><br><br>
+                                For ages 30-49:<br>
+                                • Average risk: Start at age 45<br>
+                                • High risk: Start earlier based on factors<br>
+                                • Methods: Colonoscopy, FIT test, Cologuard®<br>
+                                • Family history: Start 10 years before relative's diagnosis age<br><br>
+                                <span class="treatment-badge">DISCUSS OPTIONS WITH DOCTOR</span>`;
+                        } else {
+                            return `<strong>Colon Cancer Screening:</strong><br><br>
+                                For ages 50+:<br>
+                                • Colonoscopy: Every 10 years (gold standard)<br>
+                                • FIT test: Annually<br>
+                                • Cologuard®: Every 3 years<br>
+                                • Continue through age 75<br>
+                                • Individualized after age 75<br><br>
+                                <span class="screening-badge">REGULAR SCREENING RECOMMENDED</span>`;
+                        }
+                    }
+                    
+                    if (lowerMessage.includes('pap') || lowerMessage.includes('cervical')) {
+                        let response = `<div class="female-screening">
+                            <strong>Cervical Cancer Screening:</strong><br><br>`;
+                        
+                        if (selectedAge === '12-17') {
+                            response += `For ages 12-17:<br>
+                                • Pap smear: Not recommended<br>
+                                • HPV vaccine: Recommended ages 11-12<br>
+                                • Can start as early as age 9<br>
+                                • Catch-up to age 26 if missed<br><br>
+                                <span class="screening-badge">FOCUS ON PREVENTION</span>`;
+                        } else if (selectedAge === '18-29') {
+                            response += `For ages 18-29:<br>
+                                • Pap smear: Every 3 years<br>
+                                • HPV test: Not routine under 30<br>
+                                • Start screening at age 21<br>
+                                • Continue HPV vaccination if incomplete<br><br>
+                                <span class="screening-badge">SCREEN EVERY 3 YEARS</span>`;
+                        } else if (selectedAge === '30-49') {
+                            response += `For ages 30-49:<br>
+                                • Pap + HPV test: Every 5 years (preferred)<br>
+                                • Pap alone: Every 3 years<br>
+                                • Continue through age 65<br>
+                                • Stop if adequate negative history<br><br>
+                                <span class="screening-badge">SCREEN EVERY 3-5 YEARS</span>`;
+                        } else {
+                            response += `For ages 50+:<br>
+                                • Continue screening through age 65<br>
+                                • Pap + HPV test: Every 5 years<br>
+                                • May stop after age 65 with negative history<br>
+                                • Hysterectomy: Discuss with doctor<br><br>
+                                <span class="screening-badge">INDIVIDUALIZED AFTER 65</span>`;
+                        }
+                        
+                        response += `</div>`;
+                        return response;
+                    }
+                    
+                    // Prevention Topics
+                    if (lowerMessage.includes('blood pressure') || lowerMessage.includes('hypertension')) {
+                        return `<strong>Preventing High Blood Pressure:</strong><br><br>
+                                <div class="prevention-tip">
+                                    1. <strong>Healthy Diet:</strong> DASH diet, reduce sodium<br>
+                                    2. <strong>Regular Exercise:</strong> 150 minutes weekly<br>
+                                    3. <strong>Weight Management:</strong> Maintain healthy BMI<br>
+                                    4. <strong>Limit Alcohol:</strong> 1 drink/day women, 2 men<br>
+                                    5. <strong>No Smoking:</strong> Quit tobacco completely<br>
+                                    6. <strong>Stress Management:</strong> Meditation, yoga<br>
+                                    7. <strong>Regular Monitoring:</strong> Check at each visit
+                                </div><br>
+                                <span class="treatment-badge">TARGET: < 120/80 mmHg</span>`;
+                    }
+                    
+                    if (lowerMessage.includes('diabetes')) {
+                        return `<strong>Preventing Type 2 Diabetes:</strong><br><br>
+                                <div class="prevention-tip">
+                                    1. <strong>Weight Loss:</strong> 7% weight reduction if overweight<br>
+                                    2. <strong>Physical Activity:</strong> 150+ minutes weekly<br>
+                                    3. <strong>Healthy Eating:</strong> Whole grains, fiber, less sugar<br>
+                                    4. <strong>Regular Screening:</strong> A1C test if at risk<br>
+                                    5. <strong>Sleep Well:</strong> 7-9 hours nightly<br>
+                                    6. <strong>Manage Stress:</strong> Chronic stress affects blood sugar
+                                </div><br>
+                                <span class="treatment-badge">HIGH RISK: Start screening at age 35</span>`;
+                    }
+                    
+                    if (lowerMessage.includes('heart')) {
+                        return `<strong>Improving Heart Health:</strong><br><br>
+                                <div class="prevention-tip">
+                                    1. <strong>Know Your Numbers:</strong> Cholesterol, BP, glucose<br>
+                                    2. <strong>Heart-Healthy Diet:</strong> Mediterranean-style<br>
+                                    3. <strong>Regular Exercise:</strong> Cardio + strength training<br>
+                                    4. <strong>No Smoking:</strong> Absolute priority<br>
+                                    5. <strong>Limit Alcohol:</strong> Moderation is key<br>
+                                    6. <strong>Sleep Quality:</strong> 7-9 hours, treat apnea<br>
+                                    7. <strong>Stress Reduction:</strong> Mindfulness, hobbies
+                                </div><br>
+                                <span class="treatment-badge">HEART AGE: Ask your doctor about yours</span>`;
+                    }
+                    
+                    if (lowerMessage.includes('vaccine') || lowerMessage.includes('shot') || lowerMessage.includes('immunization')) {
+                        let response = `<strong>Recommended Vaccines:</strong><br><br>`;
+                        
+                        switch(selectedAge) {
+                            case '12-17':
+                                response += `<div class="teen-response">
+                                    <strong>For Teens (12-17):</strong><br>
+                                    • HPV vaccine (2-3 doses)<br>
+                                    • Tdap booster<br>
+                                    • MenACWY (meningococcal)<br>
+                                    • COVID-19 vaccine<br>
+                                    • Flu vaccine annually<br>
+                                    • Catch-up on any missed childhood vaccines
+                                </div>`;
+                                break;
+                            case '18-29':
+                                response += `<div class="checkup-card">
+                                    <div class="checkup-age">For Young Adults (18-29):</div>
+                                    • Tdap (tetanus) every 10 years<br>
+                                    • HPV vaccine (catch-up to age 26)<br>
+                                    • COVID-19 vaccine and boosters<br>
+                                    • Flu vaccine annually<br>
+                                    • Travel vaccines as needed<br>
+                                    • Consider Hepatitis A & B if not done
+                                </div>`;
+                                break;
+                            case '30-49':
+                                response += `<div class="checkup-card">
+                                    <div class="checkup-age">For Adults (30-49):</div>
+                                    • Tdap every 10 years<br>
+                                    • Shingles vaccine at age 50<br>
+                                    • COVID-19 boosters<br>
+                                    • Flu vaccine annually<br>
+                                    • Pneumococcal if at risk<br>
+                                    • Travel vaccines as needed
+                                </div>`;
+                                break;
+                            case '50+':
+                                response += `<div class="senior-response">
+                                    <strong>For Ages 50+:</strong><br>
+                                    • Shingles vaccine (Shingrix)<br>
+                                    • Pneumococcal vaccines<br>
+                                    • Tdap every 10 years<br>
+                                    • COVID-19 boosters<br>
+                                    • Flu vaccine annually (high dose if 65+)<br>
+                                    • RSV vaccine (ages 60+)
+                                </div>`;
+                                break;
+                        }
+                        
+                        return response;
+                    }
+                    
+                    // Sexual Health
+                    if (lowerMessage.includes('std') || lowerMessage.includes('sti') || lowerMessage.includes('sexual')) {
+                        if (lowerMessage.includes('prevent') || lowerMessage.includes('protect')) {
+                            return `<strong>STD Prevention:</strong><br><br>
+                                    <div class="prevention-tip">
+                                        1. <strong>Condoms:</strong> Correct, consistent use<br>
+                                        2. <strong>Testing:</strong> Regular screening if sexually active<br>
+                                        3. <strong>Communication:</strong> Open discussion with partners<br>
+                                        4. <strong>Vaccination:</strong> HPV, Hepatitis B<br>
+                                        5. <strong>Monogamy:</strong> Mutual with tested partner<br>
+                                        6. <strong>PrEP:</strong> For HIV prevention if high risk<br>
+                                        7. <strong>PEP:</strong> Emergency within 72 hours of exposure
+                                    </div><br>
+                                    <span class="treatment-badge">ANNUAL TESTING IF SEXUALLY ACTIVE</span>`;
+                        }
+                        
+                        if (lowerMessage.includes('hiv')) {
+                            return `<strong>HIV Information:</strong><br><br>
+                                    <div class="prevention-tip">
+                                        • <strong>Transmission:</strong> Blood, semen, vaginal fluids, breast milk<br>
+                                        • <strong>Prevention:</strong> Condoms, PrEP, PEP, undetectable=untransmittable<br>
+                                        • <strong>Testing:</strong> Rapid tests, blood tests, at-home options<br>
+                                        • <strong>Treatment:</strong> ART medications can make viral load undetectable<br>
+                                        • <strong>Support:</strong> Free testing and resources available locally
+                                    </div><br>
+                                    <span class="treatment-badge">GET TESTED: Know your status</span>`;
+                        }
+                        
+                        if (lowerMessage.includes('test') || lowerMessage.includes('screen')) {
+                            return `<strong>STD Testing:</strong><br><br>
+                                    <div class="prevention-tip">
+                                        • <strong>Who should test:</strong> Sexually active individuals<br>
+                                        • <strong>How often:</strong> Annually, or with new partners<br>
+                                        • <strong>What's tested:</strong> Chlamydia, gonorrhea, syphilis, HIV, Hepatitis<br>
+                                        • <strong>Methods:</strong> Urine, blood, swab tests<br>
+                                        • <strong>Confidentiality:</strong> Protected by law (HIPAA)<br>
+                                        • <strong>Cost:</strong> Often covered by insurance, free clinics available
+                                    </div><br>
+                                    <strong>Call (754) 273-9174 to schedule testing.</strong>`;
+                        }
+                        
+                        if (lowerMessage.includes('privacy') || lowerMessage.includes('parent') || lowerMessage.includes('teen')) {
+                            return `<strong>Teens & Privacy:</strong><br><br>
+                                    <div class="prevention-tip">
+                                        • <strong>Confidentiality:</strong> Protected for reproductive health services<br>
+                                        • <strong>Consent:</strong> Varies by state and service type<br>
+                                        • <strong>Testing:</strong> STD testing often confidential for teens<br>
+                                        • <strong>Counseling:</strong> Mental health services may be confidential<br>
+                                        • <strong>Birth Control:</strong> Some methods available confidentially<br>
+                                        • <strong>Exceptions:</strong> If harm to self/others, confidentiality may be breached
+                                    </div><br>
+                                    <span class="treatment-badge">TALK TO YOUR DOCTOR ABOUT PRIVACY</span>`;
+                        }
+                    }
+                    
+                    // Default response for unknown questions
+                    return `<div class="unknown-response">
+                                <i class="fas fa-question-circle"></i> <strong>I'm not sure about that specific question.</strong><br><br>
+                                I can help with:<br>
+                                • Clinic hours and location<br>
+                                • Age-specific checkup recommendations<br>
+                                • Cancer screening guidelines<br>
+                                • Disease prevention tips<br>
+                                • Sexual health information<br><br>
+                                Try selecting a topic button above, or call us directly at <span class="contact-info">(754) 273-9174</span> for specific medical questions.
+                            </div>`;
+                }
+                
+                // Auto-select default age
+                setTimeout(() => {
+                    const defaultAgeBtn = document.querySelector('.age-btn[data-age="18-29"]');
+                    if (defaultAgeBtn) {
+                        defaultAgeBtn.classList.add('active');
+                        selectedAge = '18-29';
+                    }
+                }, 100);
+                
+            }); // End DOMContentLoaded
+            
+        })();
+    </script>
+</body>
+</html>
